@@ -12,6 +12,19 @@
 
 Supported ABIs are `arm64-v8a` and `armeabi-v7a`. Keep Tier C peak memory under 150 MB. Tiers are assigned in `DeviceTierClassifier`.
 
+## Decisions (2026-09-28)
+
+- **Non-commercial.** Research datasets (VITON, VITON-HD, DressCode) and CC BY-NC(-SA) weights
+  are usable. The app must not be monetized.
+- **No GPU.** Teacher training and distillation (phases 1-2 below) are replaced by converting
+  the pretrained **DM-VTON** student (256x192, CC BY-NC-SA 4.0). Its published FID is 28.2 on
+  VITON-Clean; our port with the mobile-friendly ops scores 28.3 (`ml/vton/dmvton.py`). The
+  conversion runs in Linux CI (`ml/export_dmvton.py`). Fine-tuning or higher resolution
+  would need a free GPU tier (Kaggle, Colab).
+- **Testing on LDPlayer (x86_64 emulator).** Good for checking functions and results. It
+  can't measure phone speed or old-GPU behaviour, so the warp design uses the portable gather
+  formulation and the tier thresholds stay provisional.
+
 ## Phases
 
 ### 0. Scope and licensing (weeks 1-2)

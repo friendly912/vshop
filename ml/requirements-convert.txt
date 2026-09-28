@@ -1,0 +1,8 @@
+# DM-VTON -> LiteRT conversion (ml/export_dmvton.py). Linux only (litert-torch native deps).
+# Kept separate from requirements.txt: litert-torch and tensorflow pin conflicting packages.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.11.0+cpu
+litert-torch==0.9.4
+numpy
+pillow
+gdown

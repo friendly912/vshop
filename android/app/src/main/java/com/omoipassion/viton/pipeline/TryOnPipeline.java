@@ -17,6 +17,7 @@ import com.omoipassion.viton.util.ImageOps;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -55,6 +56,9 @@ public final class TryOnPipeline {
     private boolean preserveSegmenterInitialized;
     private ByteBuffer personTensor;
     private ByteBuffer garmentTensor;
+    /** Only for models with a third (garment mask) input. */
+    @Nullable
+    private ByteBuffer garmentMaskTensor;
     private ByteBuffer outputTensor;
 
     public TryOnPipeline(Context context, DeviceProfile profile) {
@@ -116,15 +120,25 @@ public final class TryOnPipeline {
 
         Rect crop = ImageOps.aspectCrop(person.getWidth(), person.getHeight(),
                 pose != null ? pose.centerX : 0.5f, spec.width, spec.height);
-        // TODO(phase 2): feed a garment mask as a third input if the student model needs it.
         ImageOps.toTensor(ImageOps.cropAndScale(person, crop, spec.width, spec.height), personTensor);
-        ImageOps.toTensor(ImageOps.fitCenter(garment, spec.width, spec.height), garmentTensor);
+        Bitmap garmentIn = ImageOps.fitCenter(garment, spec.width, spec.height);
+        ImageOps.toTensor(garmentIn, garmentTensor);
+        Object[] inputs;
+        if (garmentMaskTensor != null) {
+            int[] px = new int[spec.width * spec.height];
+            garmentIn.getPixels(px, 0, spec.width, 0, 0, spec.width, spec.height);
+            garmentMaskTensor.rewind();
+            garmentMaskTensor.asFloatBuffer().put(GarmentMask.compute(px, spec.width, spec.height));
+            inputs = new Object[]{personTensor, garmentTensor, garmentMaskTensor};
+        } else {
+            inputs = new Object[]{personTensor, garmentTensor};
+        }
 
         long inferStart = SystemClock.elapsedRealtime();
         Map<Integer, Object> outputs = new HashMap<>();
         outputTensor.rewind();
         outputs.put(0, outputTensor);
-        runner.run(new Object[]{personTensor, garmentTensor}, outputs);
+        runner.run(inputs, outputs);
         long inferenceMs = SystemClock.elapsedRealtime() - inferStart;
 
         long keepStart = SystemClock.elapsedRealtime();
@@ -176,6 +190,9 @@ public final class TryOnPipeline {
             int[] shape = {1, resolved.height, resolved.width, 3};
             r.checkInputShape(0, shape);
             r.checkInputShape(1, shape);
+            if (r.inputCount() == 3) { // e.g. DM-VTON: garment mask input
+                r.checkInputShape(2, 1, resolved.height, resolved.width, 1);
+            }
         } catch (RuntimeException e) {
             r.close();
             throw e;
@@ -187,6 +204,9 @@ public final class TryOnPipeline {
         personTensor = ImageOps.allocateRgbTensor(resolved.width, resolved.height);
         garmentTensor = ImageOps.allocateRgbTensor(resolved.width, resolved.height);
         outputTensor = ImageOps.allocateRgbTensor(resolved.width, resolved.height);
+        garmentMaskTensor = r.inputCount() == 3
+                ? ByteBuffer.allocateDirect(4 * resolved.width * resolved.height).order(ByteOrder.nativeOrder())
+                : null;
     }
 
     @Nullable
@@ -225,6 +245,7 @@ public final class TryOnPipeline {
         spec = null;
         personTensor = null;
         garmentTensor = null;
+        garmentMaskTensor = null;
         outputTensor = null;
     }
 }

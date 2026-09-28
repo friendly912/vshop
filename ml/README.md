@@ -6,6 +6,9 @@
 | `vton/preprocess.py` | Pose, parsing and garment masks for data without annotations |
 | `vton/metrics.py` | SSIM, LPIPS, FID and KID |
 | `vton/evaluate.py` | Score a folder of try-on outputs |
+| `vton/dmvton.py` | Pretrained DM-VTON on CPU with mobile-friendly ops (`check`, `infer`) |
+| `vton/mobile_ops.py` | Replacements for `grid_sample` (1-D gather) and the CUDA correlation layer |
+| `export_dmvton.py` | DM-VTON → LiteRT with output verification (Linux; CI runs it) |
 | `tests/` | pytest suite on synthetic data; CI runs it (`.github/workflows/ml.yml`) |
 | `export_placeholder_model.py`, `export_bench_model.py` | Models bundled into the Android app |
 | `warp_spike/` | Warp formulation test (see its README) |
