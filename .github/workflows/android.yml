@@ -61,12 +61,16 @@ jobs:
 
       - name: Annotate conversion failure
         if: failure() && steps.dmvton-cache.outputs.cache-hit != 'true'
+        # GitHub shows at most 10 annotations per step: summary first, then the last log lines.
         run: |
-          grep -vE "^\s*$|Warning|warn\(" build/dmvton/convert.log | tail -15 | while IFS= read -r l; do echo "::error::${l:0:400}"; done
+          if [ -f build/dmvton/report.json ]; then
+            python -c "import json; r=json.load(open('build/dmvton/report.json')); print('::error title=DM-VTON report::' + json.dumps({k: r[k] for k in ('bytes', 'checks', 'p99_abs_err') if k in r}))"
+          fi
+          grep -vE "^\s*$|Warning|warn\(|^\s+\"[A-Z_0-9:]+\",?$" build/dmvton/convert.log | tail -8 | while IFS= read -r l; do echo "::error::${l:0:400}"; done
 
       - name: Report DM-VTON conversion
         run: |
-          python -c "import json; r=json.load(open('build/dmvton/report.json')); print(f\"::notice title=DM-VTON LiteRT::{r['bytes']/1e6:.1f} MB, max abs err {r['max_abs_err']:.2e}, cpu ms {[c['cpu_ms'] for c in r['checks']]}, ops {r['ops']}\")"
+          python -c "import json; r=json.load(open('build/dmvton/report.json')); print(f\"::notice title=DM-VTON LiteRT::{r['bytes']/1e6:.1f} MB, p99 abs err {r['p99_abs_err']:.2e}, max {max(c['max'] for c in r['checks']):.2e}, cpu ms {[c['cpu_ms'] for c in r['checks']]}, ops {r['ops']}\")"
           cp build/dmvton/viton_dm.tflite android/app/src/main/assets/models/viton_c.tflite
 
       - name: Export device benchmark model
