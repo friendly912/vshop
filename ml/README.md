@@ -10,7 +10,8 @@
 | `export_placeholder_model.py`, `export_bench_model.py` | Models bundled into the Android app |
 | `warp_spike/` | Warp formulation test (see its README) |
 
-Setup: `pip install -r ml/requirements-train.txt`. Run everything below from `ml/` so `vton`
+Setup: `pip install -r ml/requirements-train.txt`. On Linux, MediaPipe also needs
+`sudo apt-get install libegl1 libgles2`, even on machines without a display. Run everything below from `ml/` so `vton`
 is importable, or set `PYTHONPATH=ml`.
 
 ## Dataset layout

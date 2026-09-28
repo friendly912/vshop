@@ -29,6 +29,10 @@ jobs:
           cache: pip
           cache-dependency-path: ml/requirements-train.txt
 
+      # MediaPipe's Python package loads EGL/GLES even for CPU-only tasks.
+      - name: Install system libraries
+        run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends libegl1 libgles2
+
       - name: Install dependencies
         run: pip install -r ml/requirements-train.txt
 
