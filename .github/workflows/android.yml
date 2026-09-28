@@ -42,16 +42,27 @@ jobs:
       - name: Build warp spike models
         run: python ml/warp_spike/build_warp_models.py
 
-      - name: Download pose model
-        run: >
-          curl -fsSL --retry 5 -o android/app/src/main/assets/models/pose_landmarker_lite.task
-          https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task
+      - name: Download MediaPipe models (pose, multiclass segmenter)
+        working-directory: android/app/src/main/assets/models
+        run: |
+          curl -fsSL --retry 5 -o pose_landmarker_lite.task \
+            https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task
+          curl -fsSL --retry 5 -o selfie_multiclass_256x256.tflite \
+            https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Build APK and run lint
+      - name: Build APK, run unit tests and lint
         working-directory: android
-        run: ./gradlew assembleDebug lintDebug --console=plain
+        run: ./gradlew assembleDebug testDebugUnitTest lintDebug --console=plain
+
+      - name: Upload unit test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-tests-${{ github.sha }}
+          path: android/app/build/reports/tests/testDebugUnitTest/
+          if-no-files-found: ignore
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

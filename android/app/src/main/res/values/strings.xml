@@ -13,7 +13,7 @@
     <string name="processing">Processing on device…</string>
 
     <string name="device_status">Device tier %1$s · RAM %2$d MB · GPU %3$s</string>
-    <string name="result_status">%1$s · %2$s · pose %3$d ms · model %4$d ms · total %5$d ms</string>
+    <string name="result_status">%1$s · %2$s · pose %3$d ms · model %4$d ms · keep %5$d ms · total %6$d ms</string>
     <string name="backend_gpu">GPU</string>
     <string name="backend_cpu">CPU</string>
     <string name="yes">yes</string>

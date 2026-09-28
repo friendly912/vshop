@@ -85,10 +85,12 @@ public final class ImageOps {
         return Bitmap.createBitmap(px, w, h, Bitmap.Config.ARGB_8888);
     }
 
-    /** Pastes the model output back into the full-resolution original. */
+    /**
+     * Pastes the model output back into the full-resolution original. Used when the
+     * segmenter is unavailable; otherwise TryOnPipeline blends with a keep mask.
+     */
     public static Bitmap compose(Bitmap original, Rect crop, Bitmap result) {
         Bitmap out = original.copy(Bitmap.Config.ARGB_8888, true);
-        // TODO(phase 5): keep face/hair/hands from the original via a parsing mask + feathered blend.
         new Canvas(out).drawBitmap(result, null, crop, FILTER);
         return out;
     }

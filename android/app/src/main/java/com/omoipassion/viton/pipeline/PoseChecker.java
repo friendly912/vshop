@@ -15,6 +15,7 @@ import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarkerResult;
 import com.omoipassion.viton.util.Assets;
 
 import java.io.Closeable;
+import java.util.ArrayList;
 import java.util.List;
 
 /** Validates the person photo and finds the torso center, using MediaPipe Pose Landmarker. */
@@ -29,13 +30,20 @@ final class PoseChecker implements Closeable {
     private static final int R_HIP = 24;
     private static final int[] TORSO = {L_SHOULDER, R_SHOULDER, L_HIP, R_HIP};
     private static final float MIN_VISIBILITY = 0.5f;
+    /** Per side: wrist, pinky, index, thumb (BlazePose indices). */
+    private static final int[][] HANDS = {{15, 17, 19, 21}, {16, 18, 20, 22}};
+    /** A hand spans roughly half the shoulder width. */
+    private static final float HAND_RADIUS_PER_SHOULDER = 0.3f;
 
-    /** Torso center, normalized 0..1. */
     static final class Pose {
+        /** Torso center, normalized 0..1. */
         final float centerX;
+        /** Visible hands, normalized 0..1 (x of width, y of height, radius of width). */
+        final List<float[]> hands;
 
-        Pose(float centerX) {
+        Pose(float centerX, List<float[]> hands) {
             this.centerX = centerX;
+            this.hands = hands;
         }
     }
 
@@ -82,7 +90,34 @@ final class PoseChecker implements Closeable {
             }
             sumX += p.x();
         }
-        return new Pose(sumX / TORSO.length);
+        return new Pose(sumX / TORSO.length, hands(lm, person.getWidth(), person.getHeight()));
+    }
+
+    private static List<float[]> hands(List<NormalizedLandmark> lm, int w, int h) {
+        float shoulderPx = (float) Math.hypot(
+                (lm.get(L_SHOULDER).x() - lm.get(R_SHOULDER).x()) * w,
+                (lm.get(L_SHOULDER).y() - lm.get(R_SHOULDER).y()) * h);
+        List<float[]> out = new ArrayList<>(2);
+        for (int[] side : HANDS) {
+            if (lm.get(side[0]).visibility().orElse(0f) < MIN_VISIBILITY) {
+                continue;
+            }
+            float cx = 0f;
+            float cy = 0f;
+            for (int i : side) {
+                cx += lm.get(i).x() * w;
+                cy += lm.get(i).y() * h;
+            }
+            cx /= side.length;
+            cy /= side.length;
+            // Cover the landmark spread, but never less than a typical hand size.
+            float r = HAND_RADIUS_PER_SHOULDER * shoulderPx;
+            for (int i : side) {
+                r = Math.max(r, 1.3f * (float) Math.hypot(lm.get(i).x() * w - cx, lm.get(i).y() * h - cy));
+            }
+            out.add(new float[]{cx / w, cy / h, r / w});
+        }
+        return out;
     }
 
     @Override

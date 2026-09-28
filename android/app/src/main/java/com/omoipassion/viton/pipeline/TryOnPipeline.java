@@ -47,6 +47,9 @@ public final class TryOnPipeline {
     @Nullable
     private PoseChecker poseChecker;
     private boolean poseCheckerInitialized;
+    @Nullable
+    private PreserveSegmenter preserveSegmenter;
+    private boolean preserveSegmenterInitialized;
     private ByteBuffer personTensor;
     private ByteBuffer garmentTensor;
     private ByteBuffer outputTensor;
@@ -93,15 +96,12 @@ public final class TryOnPipeline {
         ModelSpec spec = this.spec;
         LiteRtRunner runner = this.runner;
 
-        float centerX = 0.5f;
-        PoseChecker pose = poseChecker();
-        if (pose != null) {
-            centerX = pose.check(person).centerX;
-        }
+        PoseChecker checker = poseChecker();
+        PoseChecker.Pose pose = checker != null ? checker.check(person) : null;
         long poseMs = SystemClock.elapsedRealtime() - start;
 
         Rect crop = ImageOps.aspectCrop(person.getWidth(), person.getHeight(),
-                centerX, spec.width, spec.height);
+                pose != null ? pose.centerX : 0.5f, spec.width, spec.height);
         // TODO(phase 2): feed a garment mask as a third input if the student model needs it.
         ImageOps.toTensor(ImageOps.cropAndScale(person, crop, spec.width, spec.height), personTensor);
         ImageOps.toTensor(ImageOps.fitCenter(garment, spec.width, spec.height), garmentTensor);
@@ -113,11 +113,40 @@ public final class TryOnPipeline {
         runner.run(new Object[]{personTensor, garmentTensor}, outputs);
         long inferenceMs = SystemClock.elapsedRealtime() - inferStart;
 
+        long keepStart = SystemClock.elapsedRealtime();
+        PreserveSegmenter preserver = preserveSegmenter();
+        PreserveSegmenter.KeepMask keep = preserver != null ? preserver.keepMask(person, pose) : null;
+        long keepMs = SystemClock.elapsedRealtime() - keepStart;
+
         Bitmap out = ImageOps.fromTensor(outputTensor, spec.width, spec.height);
-        Bitmap composed = ImageOps.compose(person, crop, out);
+        Bitmap composed = compose(person, crop, out, keep);
         long totalMs = SystemClock.elapsedRealtime() - start;
         return new TryOnResult(composed, spec.name(), runner.isUsingGpu(),
-                poseMs, inferenceMs, totalMs);
+                poseMs, inferenceMs, keepMs, totalMs);
+    }
+
+    /**
+     * Pastes the model output into the crop of the full-resolution original, keeping the
+     * original wherever {@code keep} says so (face, hair, hands, far background).
+     */
+    private static Bitmap compose(Bitmap original, Rect crop, Bitmap result,
+                                  @Nullable PreserveSegmenter.KeepMask keep) {
+        if (keep == null) {
+            return ImageOps.compose(original, crop, result);
+        }
+        int cw = crop.width();
+        int ch = crop.height();
+        Bitmap scaled = Bitmap.createScaledBitmap(result, cw, ch, true);
+        int[] tryOn = new int[cw * ch];
+        int[] orig = new int[cw * ch];
+        scaled.getPixels(tryOn, 0, cw, 0, 0, cw, ch);
+        original.getPixels(orig, 0, cw, crop.left, crop.top, cw, ch);
+        MaskOps.blendInto(tryOn, orig, cw, ch, crop.left, crop.top,
+                original.getWidth(), original.getHeight(), keep.alpha, keep.width, keep.height);
+
+        Bitmap out = original.copy(Bitmap.Config.ARGB_8888, true);
+        out.setPixels(tryOn, 0, cw, crop.left, crop.top, cw, ch);
+        return out;
     }
 
     private void ensureModelLoaded() throws TryOnException, IOException {
@@ -155,6 +184,15 @@ public final class TryOnPipeline {
         return poseChecker;
     }
 
+    @Nullable
+    private PreserveSegmenter preserveSegmenter() {
+        if (!preserveSegmenterInitialized) {
+            preserveSegmenter = PreserveSegmenter.createOrNull(appContext);
+            preserveSegmenterInitialized = true;
+        }
+        return preserveSegmenter;
+    }
+
     private void releaseNow() {
         if (runner != null) {
             runner.close();
@@ -165,6 +203,11 @@ public final class TryOnPipeline {
             poseChecker = null;
         }
         poseCheckerInitialized = false;
+        if (preserveSegmenter != null) {
+            preserveSegmenter.close();
+            preserveSegmenter = null;
+        }
+        preserveSegmenterInitialized = false;
         spec = null;
         personTensor = null;
         garmentTensor = null;

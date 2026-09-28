@@ -45,7 +45,13 @@ Already set up in `android/`:
 Still to do:
 - Add a first-run micro-benchmark to refine the tier.
 - Deliver Tier A/B models through Play Asset Delivery.
-- Add garment masking and the face/hair/hand-preserving composite.
+- Add garment masking.
+- Keep lower-body clothing (trousers, skirts) from the original. The segmenter has one
+  "clothes" class, so this needs a split at the hips using the pose landmarks.
+
+Done: a composite that keeps face, hair and hands (`PreserveSegmenter` + `MaskOps`). It keeps
+face, hair, accessories, hands (body skin inside pose-based hand circles) and background
+beyond a 6% margin from the person, with feathered edges.
 
 ### 5. Quality hardening (weeks 19-23), milestone M4
 - Failure cases: crossed arms, occlusion, long hair, loose garments, low light, and a range of skin tones.

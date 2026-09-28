@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
                 binding.statusText.setText(getString(R.string.result_status,
                         r.modelName,
                         getString(r.usedGpu ? R.string.backend_gpu : R.string.backend_cpu),
-                        r.poseMs, r.inferenceMs, r.totalMs));
+                        r.poseMs, r.inferenceMs, r.keepMs, r.totalMs));
             }
 
             @Override
