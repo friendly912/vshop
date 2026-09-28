@@ -38,6 +38,11 @@ android {
         viewBinding true
     }
 
+    lint {
+        // Play rejects native libs without 16 KB page alignment; fail the build, not just warn.
+        error.add('Aligned16KB')
+    }
+
     androidResources {
         // Models must stay uncompressed so they can be memory-mapped.
         noCompress 'tflite', 'task'

@@ -1,0 +1,5 @@
+# Model export + warp spike. CPU-only; torch comes from the PyTorch CPU index.
+--extra-index-url https://download.pytorch.org/whl/cpu
+numpy==2.2.6
+tensorflow==2.21.0
+torch==2.11.0+cpu
