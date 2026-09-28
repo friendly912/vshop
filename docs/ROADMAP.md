@@ -43,11 +43,16 @@ Already set up in `android/`:
 - `ui/`: CameraX capture, gallery pickers and the result view.
 
 Still to do:
-- Add a first-run micro-benchmark to refine the tier.
+- Calibrate the first-run benchmark thresholds (`TIER_A_MAX_MS`, `TIER_B_MAX_MS` in
+  `DeviceTierClassifier`) from device reports once the phase 2 student exists.
 - Deliver Tier A/B models through Play Asset Delivery.
 - Add garment masking.
 - Keep lower-body clothing (trousers, skirts) from the original. The segmenter has one
   "clothes" class, so this needs a split at the hips using the pose landmarks.
+
+Done: a first-run device benchmark. A MobileNetV2-0.5 reference workload is timed on CPU and
+GPU once per OS build. The GPU is used only if its output matches the CPU and it's faster.
+RAM and 64-bit stay hard gates; measured speed decides the rest.
 
 Done: a composite that keeps face, hair and hands (`PreserveSegmenter` + `MaskOps`). It keeps
 face, hair, accessories, hands (body skin inside pose-based hand circles) and background

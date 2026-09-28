@@ -92,6 +92,10 @@ public final class LiteRtRunner implements Closeable {
         return interpreter.getInputTensor(index).shape();
     }
 
+    public int[] outputShape(int index) {
+        return interpreter.getOutputTensor(index).shape();
+    }
+
     public void run(Object[] inputs, Map<Integer, Object> outputs) {
         interpreter.runForMultipleInputsOutputs(inputs, outputs);
     }

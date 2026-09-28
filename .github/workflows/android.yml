@@ -39,6 +39,9 @@ jobs:
       - name: Generate placeholder try-on models
         run: python ml/export_placeholder_model.py --out android/app/src/main/assets/models
 
+      - name: Export device benchmark model
+        run: python ml/export_bench_model.py --out android/app/src/main/assets/models
+
       - name: Build warp spike models
         run: python ml/warp_spike/build_warp_models.py
 

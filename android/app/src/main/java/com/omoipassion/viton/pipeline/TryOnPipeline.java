@@ -9,6 +9,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.omoipassion.viton.device.DeviceProfile;
+import com.omoipassion.viton.device.DeviceTierClassifier;
 import com.omoipassion.viton.ml.LiteRtRunner;
 import com.omoipassion.viton.ml.ModelSpec;
 import com.omoipassion.viton.util.AppExecutors;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Person photo + garment photo → try-on image, fully on device.
@@ -37,7 +39,8 @@ public final class TryOnPipeline {
     private static final String TAG = "TryOnPipeline";
 
     private final Context appContext;
-    private final DeviceProfile profile;
+    /** Replaced once by the first-run benchmark (on the inference thread). */
+    private volatile DeviceProfile profile;
 
     // Owned by the inference thread.
     @Nullable
@@ -57,10 +60,21 @@ public final class TryOnPipeline {
     public TryOnPipeline(Context context, DeviceProfile profile) {
         this.appContext = context.getApplicationContext();
         this.profile = profile;
+        // First task on the single inference thread, so every try-on sees the measured tier.
+        AppExecutors.inference().execute(() ->
+                this.profile = DeviceTierClassifier.benchmarkIfNeeded(appContext, this.profile));
     }
 
     public DeviceProfile profile() {
         return profile;
+    }
+
+    /** Delivers the profile on the main thread once the first-run benchmark has finished. */
+    public void whenProfileReady(Consumer<DeviceProfile> callback) {
+        AppExecutors.inference().execute(() -> {
+            DeviceProfile p = profile;
+            AppExecutors.runOnMain(() -> callback.accept(p));
+        });
     }
 
     public void run(Bitmap person, Bitmap garment, Callback callback) {

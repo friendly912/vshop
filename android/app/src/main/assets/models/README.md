@@ -9,6 +9,7 @@ deliver Tier A/B models through Play Asset Delivery.
 | `viton_b.tflite` | Optional | Phase 2 student, 512x384 |
 | `viton_a.tflite` | Optional | Phase 2/6 flagship model, 512x384 |
 | `pose_landmarker_lite.task` | Recommended (without it, the pose check and hand keeping are skipped) | https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task |
+| `bench_ref.tflite` | Recommended (without it, the tier is guessed from RAM and Android version) | `python ml/export_bench_model.py --out <this folder>` |
 | `selfie_multiclass_256x256.tflite` | Recommended (without it, face, hair and hands aren't kept from the original) | https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite |
 
 The segmenter's classes (from its embedded `labels.txt`) are 0 background, 1 hair, 2 body skin,

@@ -29,6 +29,7 @@ import com.omoipassion.viton.util.BitmapLoader;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -79,6 +80,12 @@ public class MainActivity extends AppCompatActivity {
 
         pipeline = ((VitonApp) getApplication()).pipeline();
         showDeviceStatus(pipeline.profile());
+        pipeline.whenProfileReady(p -> {
+            // Don't overwrite "Processing…" or a result's timings.
+            if (!isDestroyed() && !running && binding.resultImage.getDrawable() == null) {
+                showDeviceStatus(p);
+            }
+        });
 
         binding.capturePersonButton.setOnClickListener(
                 v -> captureLauncher.launch(new Intent(this, CaptureActivity.class)));
@@ -200,7 +207,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showDeviceStatus(DeviceProfile p) {
+        String bench = p.benchmarked()
+                ? String.format(Locale.US, "%.1f ms", p.bestMs())
+                : getString(R.string.bench_measuring);
         binding.statusText.setText(getString(R.string.device_status,
-                p.tier.name(), p.totalRamMb, getString(p.gpuUsable ? R.string.yes : R.string.no)));
+                p.tier.name(), p.totalRamMb, getString(p.gpuUsable ? R.string.yes : R.string.no), bench));
     }
 }

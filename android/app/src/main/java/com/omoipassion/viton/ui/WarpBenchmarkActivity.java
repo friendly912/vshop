@@ -17,6 +17,7 @@ import com.omoipassion.viton.databinding.ActivityWarpBenchmarkBinding;
 import com.omoipassion.viton.device.DeviceProfile;
 import com.omoipassion.viton.ml.LiteRtRunner;
 import com.omoipassion.viton.ml.WarpOps;
+import com.omoipassion.viton.pipeline.TryOnPipeline;
 import com.omoipassion.viton.util.AppExecutors;
 
 import java.io.IOException;
@@ -70,11 +71,12 @@ public class WarpBenchmarkActivity extends AppCompatActivity {
         binding.runButton.setEnabled(false);
         binding.reportText.setText(R.string.bench_running);
         Context app = getApplicationContext();
-        DeviceProfile profile = ((VitonApp) getApplication()).pipeline().profile();
-        // Same thread as the try-on pipeline: the GPU delegate is thread-bound.
+        TryOnPipeline pipeline = ((VitonApp) getApplication()).pipeline();
+        // Same thread as the try-on pipeline: the GPU delegate is thread-bound. Queued after
+        // the first-run device benchmark, so the profile below is the measured one.
         AppExecutors.inference().execute(() -> {
             StringBuilder sb = new StringBuilder();
-            line(sb, deviceHeader(profile));
+            line(sb, deviceHeader(pipeline.profile()));
             try {
                 String[] files = app.getAssets().list(DIR);
                 if (files == null || files.length == 0) {
@@ -222,9 +224,10 @@ public class WarpBenchmarkActivity extends AppCompatActivity {
 
     private static String deviceHeader(DeviceProfile p) {
         String soc = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ? Build.SOC_MODEL : Build.HARDWARE;
-        return String.format(Locale.US, "%s %s | Android %s (API %d) | SoC %s | %s | tier %s, RAM %d MB",
+        return String.format(Locale.US, "%s %s | Android %s (API %d) | SoC %s | %s | tier %s, RAM %d MB"
+                        + "\nreference bench: CPU %.1f ms, GPU %.1f ms, use GPU %b",
                 Build.MANUFACTURER, Build.MODEL, Build.VERSION.RELEASE, Build.VERSION.SDK_INT, soc,
-                Build.SUPPORTED_ABIS[0], p.tier, p.totalRamMb);
+                Build.SUPPORTED_ABIS[0], p.tier, p.totalRamMb, p.benchCpuMs, p.benchGpuMs, p.gpuUsable);
     }
 
     private static void line(StringBuilder sb, String s) {
