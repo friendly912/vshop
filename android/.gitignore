@@ -1,0 +1,14 @@
+*.iml
+.gradle/
+/local.properties
+.idea/
+.DS_Store
+/build/
+/app/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+# Trained models are large; ship via Play Asset Delivery, not git.
+/app/src/main/assets/models/*.tflite
+/app/src/main/assets/models/*.task
+/app/src/main/assets/models/warp/

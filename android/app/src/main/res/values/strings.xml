@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">OmoiPassion Try-On</string>
+
+    <string name="person">Person</string>
+    <string name="garment">Garment</string>
+    <string name="result">Result</string>
+    <string name="capture_person">Take photo</string>
+    <string name="pick_person">Person from gallery</string>
+    <string name="pick_garment">Pick garment</string>
+    <string name="try_on">Try on</string>
+    <string name="capture">Capture</string>
+    <string name="switch_camera">Switch camera</string>
+    <string name="processing">Processing on device…</string>
+
+    <string name="device_status">Device tier %1$s · RAM %2$d MB · GPU %3$s</string>
+    <string name="result_status">%1$s · %2$s · pose %3$d ms · model %4$d ms · total %5$d ms</string>
+    <string name="backend_gpu">GPU</string>
+    <string name="backend_cpu">CPU</string>
+    <string name="yes">yes</string>
+    <string name="no">no</string>
+
+    <string name="warp_benchmark">Warp benchmark</string>
+    <string name="bench_run">Run</string>
+    <string name="bench_copy">Copy report</string>
+    <string name="bench_copied">Report copied</string>
+    <string name="bench_running">Running… (about 1 minute on old phones)</string>
+
+    <string name="error_camera_permission">Camera permission is required to take a photo.</string>
+    <string name="error_camera">Could not start the camera.</string>
+    <string name="error_capture">Could not save the photo.</string>
+    <string name="error_load_image">Could not load this image.</string>
+    <string name="error_model_missing">No try-on model is installed. See assets/models/README.md.</string>
+    <string name="error_no_person">No person found. Use a photo with one person facing the camera.</string>
+    <string name="error_torso_not_visible">Shoulders and hips must be visible. Step back and retake.</string>
+    <string name="error_out_of_memory">Not enough memory. Close other apps and try again.</string>
+    <string name="error_internal">Try-on failed. Please try again.</string>
+</resources>
