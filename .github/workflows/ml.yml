@@ -34,4 +34,13 @@ jobs:
 
       # Pose/segmenter models are downloaded by vton.preprocess on first use.
       - name: Run tests
-        run: python -m pytest ml/tests -v
+        run: |
+          set -o pipefail
+          python -m pytest ml/tests -v -rfE --tb=short 2>&1 | tee pytest.log
+
+      # Surface failures as annotations, visible on the run page without opening logs.
+      - name: Annotate failures
+        if: failure()
+        run: |
+          grep -E "^(FAILED|ERROR) " pytest.log | head -20 | while IFS= read -r l; do echo "::error::${l:0:400}"; done
+          grep -E "^E +" pytest.log | head -10 | while IFS= read -r l; do echo "::error::${l:0:400}"; done
