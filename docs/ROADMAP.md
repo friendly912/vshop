@@ -23,6 +23,13 @@ Supported ABIs are `arm64-v8a` and `armeabi-v7a`. Keep Tier C peak memory under 
 - Teacher models: HR-VITON or GP-VTON (warping-based) and CatVTON or IDM-VTON (diffusion, the quality ceiling).
 - Metrics: FID, KID, SSIM and LPIPS on the benchmark set, plus a set of real phone photos.
 
+Done (`ml/vton`, CPU-only, tested in CI): dataset loader and layout checker for the VITON-HD
+layout, preprocessing (MediaPipe pose and 6-class parsing, garment masks), and SSIM, LPIPS,
+FID and KID with an evaluation CLI.
+
+Still needs the phase 0 decisions: which dataset (licensing), converting it to the common
+layout, and GPU time for the teacher models.
+
 ### 2. Mobile student distillation (weeks 6-12)
 - A parser-free student in the style of PF-AFN and DM-VTON, so it needs only the person and garment images at inference time.
 - MobileNetV3 or EfficientNet-lite encoders, appearance-flow warping and a lightweight generator.

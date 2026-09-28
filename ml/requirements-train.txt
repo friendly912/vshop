@@ -1,0 +1,14 @@
+# Phase 1 tooling (ml/vton): data loading, preprocessing, evaluation, tests.
+# CPU wheels by default. On a GPU machine, install the CUDA build of torch/torchvision first
+# (https://pytorch.org/get-started/locally/) and drop the extra index below.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.11.0+cpu
+torchvision
+numpy
+scipy
+pillow
+opencv-python-headless
+mediapipe
+lpips          # LPIPS metric (downloads AlexNet weights on first use)
+pytorch-fid    # reference FID InceptionV3 (downloads weights on first use)
+pytest

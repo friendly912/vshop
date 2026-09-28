@@ -9,3 +9,7 @@ venv/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Downloaded models for ml/vton/preprocess
+ml/.cache/
+.pytest_cache/
